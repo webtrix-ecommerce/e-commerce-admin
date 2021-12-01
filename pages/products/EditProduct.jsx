@@ -1,26 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import Router from 'next/router';
+import  Router,{ withRouter } from 'next/router';
 import ContainerDefault from '~/components/layouts/ContainerDefault';
 import HeaderDashboard from '~/components/shared/headers/HeaderDashboard';
 import { connect, useDispatch } from 'react-redux';
 import { toggleDrawerMenu } from '~/store/app/action';
 import { Form, Input, notification, Button, Select, Upload } from 'antd';
-import { getCatrgrylist, productCreate } from '~/components/api/url-helper';
+import { getCatrgrylist, productUpdate } from '~/components/api/url-helper';
 
 
-const CreateProductPage = () => {
+
+const editeProductPage = (props) => {
+    // console.log("react", JSON.parse(props.router.query.data));
+    const [editecategory, setEditecategory] = useState('');
     const [categorylist, setCategorylist] = useState([]);
+    const [key, setKey] = useState([]);
+    const [form] = Form.useForm();
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(toggleDrawerMenu(false));
+         setEditecategory(JSON.parse(sessionStorage.getItem("category")));
+        setKey(JSON.parse(props.router.query.data));
+        // setEditecategory(key.category);
         getCatrgrylist().then((res) => {
             console.log(res);
             setCategorylist(res.data.result);
+
         })
     }, []);
+    
+    console.log(key);
+    form.setFieldsValue({
+        productName: key.name,
+        productCode: key.code,
+        price: key.price,
+        details: key.details,
+        // mfile: image,
+        discount: key.discount,
+        description: key.description,
+        category: editecategory
+    });
+    console.log(key);
+  
     const handelsubmit = (value) => {
         console.log(value);
         const loginFormData = new FormData();
+        loginFormData.append("productId", key.id);
         loginFormData.append("productName", value.productName);
         loginFormData.append("productCode", value.productCode);
         loginFormData.append("price", value.price);
@@ -30,7 +54,7 @@ const CreateProductPage = () => {
         loginFormData.append("description", value.description);
         loginFormData.append("category", value.category);
         console.log(loginFormData);
-        productCreate(loginFormData).then((res) => {
+        productUpdate(loginFormData).then((res) => {
             console.log(res);
             console.log(res.status);
             if (res.data.status === 200) {
@@ -50,9 +74,17 @@ const CreateProductPage = () => {
             }
         })
     }
-    const { Option } = Select;
-    console.log("category ", categorylist);
+    // const fileList = [
+    //     {
+    //         name: key.filename,
+    //         url: key.imageURL,
+    //         //   thumbUrl: key.imageURL,
+    //     }
+    // ];
+   
+    const Option = Select.Option;
     return (
+
         <ContainerDefault title="Create new product">
             <HeaderDashboard
                 title="Create Product"
@@ -61,18 +93,18 @@ const CreateProductPage = () => {
             <section className="ps-new-item">
                 <Form
                     className="ps-form ps-form--new-product"
+                    form={form}
                     onFinish={handelsubmit}
                 >
                     <div className="ps-form__content">
                         <div className="row">
                             <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                                 <figure className="ps-block--form-box">
-                                    <figcaption>General</figcaption>
+                                    <figcaption>Edit Product</figcaption>
                                     <div className="ps-block__content w-md-75 ">
                                         <div className="form-group w-md-75">
                                             <Form.Item
                                                 name="productName"
-
                                                 rules={[
                                                     {
                                                         required: true,
@@ -112,7 +144,6 @@ const CreateProductPage = () => {
                                         <div className="form-group">
                                             <Form.Item
                                                 name="price"
-
                                                 rules={[
                                                     {
                                                         required: true,
@@ -127,11 +158,11 @@ const CreateProductPage = () => {
 
                                                 />
                                             </Form.Item>
-                                        </div>
+                                        </div> 
+
                                         <div className="form-group">
                                             <Form.Item
                                                 name="details"
-
                                                 rules={[
                                                     {
                                                         required: true,
@@ -187,6 +218,7 @@ const CreateProductPage = () => {
                                                 />
                                             </Form.Item>
                                         </div>
+
                                         <div className="form-group">
                                             <Form.Item
                                                 name="category"
@@ -204,16 +236,17 @@ const CreateProductPage = () => {
                                                     placeholder="Select a Category"
 
                                                 >
-                                                    {categorylist?categorylist.map((list, index) => {
+                                                    {categorylist.map((list, index) => {
                                                         return (<Option key={index} value={list.name}>{list.name}</Option>)
                                                     }
-                                                    ):""}
+                                                    )}
                                                 </Select>
                                             </Form.Item>
                                         </div>
                                         <div className="form-group text-center">
                                             <Form.Item
                                                 name="mfile"
+                                                type="file"
 
                                                 rules={[
                                                     {
@@ -223,14 +256,15 @@ const CreateProductPage = () => {
                                                     },
                                                 ]}>
                                                 <Upload
-
+                                                    
                                                     listType="picture"
-                                                    // multiple
+                                                    
                                                     className="upload-list-inline"
                                                 >
                                                     <Button >Upload Product </Button>
                                                 </Upload>
                                             </Form.Item>
+                                            {/* <img  src={key.imageURL}></img> */}
                                         </div>
                                     </div>
                                 </figure>
@@ -245,10 +279,10 @@ const CreateProductPage = () => {
                         </a>
                         {/* <Button className="ps-btn ps-btn--gray">Cancel</Button> */}
                         <button className="ps-btn success"  htmlType="submit">Submit</button>
-                    </div>
+                    </div>  
                 </Form>
             </section >
         </ContainerDefault >
     );
 };
-export default connect((state) => state.app)(CreateProductPage);
+export default withRouter(editeProductPage);
